@@ -4,7 +4,6 @@ import java.util.List;
 
 public class Res {
     private String result;
-    private String error;
     private String msg;
     private User userInfo;
     private List<Order> orderInfo;
@@ -16,14 +15,6 @@ public class Res {
 
     public void setResult(String result) {
         this.result = result;
-    }
-
-    public String getError() {
-        return error;
-    }
-
-    public void setError(String error) {
-        this.error = error;
     }
 
     public String getMsg() {

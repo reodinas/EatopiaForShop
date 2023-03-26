@@ -27,6 +27,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.provider.MediaStore;
 import android.util.Log;
+import android.view.Gravity;
 import android.widget.Button;
 import android.widget.Toast;
 
@@ -34,6 +35,7 @@ import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
+import com.google.android.material.snackbar.Snackbar;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.mlkit.vision.common.InputImage;
 import com.google.mlkit.vision.face.Face;
@@ -44,7 +46,11 @@ import com.reodinas2.eatopiaforshop.api.FaceApi;
 import com.reodinas2.eatopiaforshop.api.NetworkClient;
 import com.reodinas2.eatopiaforshop.model.Res;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.io.File;
+import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
@@ -73,10 +79,10 @@ public class CameraActivity extends AppCompatActivity {
     // Initialize the face detector
     private FaceDetectorOptions options =
             new FaceDetectorOptions.Builder()
-                    .setPerformanceMode(FaceDetectorOptions.PERFORMANCE_MODE_FAST)
-                    .setLandmarkMode(FaceDetectorOptions.LANDMARK_MODE_NONE)
-                    .setContourMode(FaceDetectorOptions.CONTOUR_MODE_NONE)
-                    .setMinFaceSize(0.3f)
+                    .setPerformanceMode(FaceDetectorOptions.PERFORMANCE_MODE_ACCURATE)
+                    .setLandmarkMode(FaceDetectorOptions.LANDMARK_MODE_ALL)
+                    .setContourMode(FaceDetectorOptions.CONTOUR_MODE_ALL)
+                    .setMinFaceSize(0.4f)
                     .enableTracking()
                     .build();
     private FaceDetector detector = FaceDetection.getClient(options);
@@ -186,7 +192,9 @@ public class CameraActivity extends AppCompatActivity {
                                                 Log.i("EATOPIA", "" + currentTrackingId);
 
                                                 if (currentTrackingId != previousTrackingId){
-                                                    Toast.makeText(CameraActivity.this, "얼굴을 감지했습니다.", Toast.LENGTH_SHORT).show();
+                                                    Snackbar.make(previewView, "얼굴을 감지했습니다.", Snackbar.LENGTH_SHORT).show();
+
+
 
                                                     capturePhoto();
                                                     previousTrackingId = currentTrackingId;
@@ -237,7 +245,7 @@ public class CameraActivity extends AppCompatActivity {
                 new ImageCapture.OnImageSavedCallback() {
                     @Override
                     public void onImageSaved(@NonNull ImageCapture.OutputFileResults outputFileResults) {
-                        Toast.makeText(CameraActivity.this, "고객정보를 확인 중.", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(CameraActivity.this, "고객정보를 확인 중...", Toast.LENGTH_SHORT).show();
 
                         Uri savedUri = outputFileResults.getSavedUri();
                         String filePath = getRealPathFromURI(savedUri);
@@ -260,37 +268,54 @@ public class CameraActivity extends AppCompatActivity {
 
                                 if (response.isSuccessful()) {
                                     if (response.body().getMsg() != null) {
-                                        Toast.makeText(CameraActivity.this, "" +response.body().getMsg(), Toast.LENGTH_SHORT).show();
+                                        Toast toast = Toast.makeText(CameraActivity.this, "" +response.body().getMsg(), Toast.LENGTH_SHORT);
+//                                        toast.setGravity(Gravity.CENTER, 0, 0);
+                                        toast.show();
                                         Log.i("LOGCAT", "1. "+response.body().getMsg());
 
+                                    }else if (response.body().getOrderInfo().isEmpty()){
+                                        Toast toast = Toast.makeText(CameraActivity.this,
+                                                response.body().getUserInfo().getNickname()+"님. 현재 매장에서 진행중인 주문내역이 없습니다.", Toast.LENGTH_SHORT);
+//                                        toast.setGravity(Gravity.CENTER, 0, 0);
+                                        toast.show();
+                                        Log.i("LOGCAT", "2. 등록된 고객입니다 " +response.body().getUserInfo().getNickname());
+
                                     }else {
-                                        Toast.makeText(CameraActivity.this,
-                                                response.body().getUserInfo().getNickname()+"님 예약시간: "
+                                        Toast toast = Toast.makeText(CameraActivity.this,
+                                                response.body().getUserInfo().getNickname()+"님. 예약시간: "
                                                         +response.body().getOrderInfo().get(0).getReservTime()+", 예약인원: "
-                                                        +response.body().getOrderInfo().get(0).getPeople()+"명", Toast.LENGTH_SHORT).show();
+                                                        +response.body().getOrderInfo().get(0).getPeople()+"명", Toast.LENGTH_SHORT);
+//                                        toast.setGravity(Gravity.CENTER, 0, 0);
+                                        toast.show();
                                         Log.i("LOGCAT", "2. 등록된 고객입니다 " +response.body().getUserInfo().getNickname());
                                     }
 
                                 }else {
-                                    Toast.makeText(CameraActivity.this, "" +response.body().getError(), Toast.LENGTH_SHORT).show();
-                                    Log.i("LOGCAT","3."+response.body().getError());
+                                    try {
+                                        JSONObject errorJson = new JSONObject(response.errorBody().string());
+                                        String errorMessage = errorJson.getString("error");
+                                        Toast toast = Toast.makeText(CameraActivity.this, "" + errorMessage, Toast.LENGTH_SHORT);
+//                                        toast.setGravity(Gravity.CENTER, 0, 0);
+                                        toast.show();
+                                        Log.i("LOGCAT", "에러 상태코드: " + response.code() + ", 메시지: " + errorMessage);
+                                    } catch (IOException | JSONException e) {
+                                        e.printStackTrace();
+                                    }
                                 }
 
-                                Handler handler = new Handler();
-                                handler.postDelayed(new Runnable() {
-                                    @Override
-                                    public void run() {
-                                        finish();
-                                    }
-                                }, 2000); //딜레이 타임 조절
+//                                Handler handler = new Handler();
+//                                handler.postDelayed(new Runnable() {
+//                                    @Override
+//                                    public void run() {
+//                                        finish();
+//                                    }
+//                                }, 2000); //딜레이 타임 조절
 
                             }
 
                             @Override
                             public void onFailure(Call<Res> call, Throwable t) {
                                 Log.i("LOGCAT", "Fail");
-                                Log.i("LOGCAT", String.valueOf(t));
-
 
                             }
                         });
