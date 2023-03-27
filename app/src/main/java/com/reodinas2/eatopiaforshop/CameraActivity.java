@@ -281,12 +281,10 @@ public class CameraActivity extends AppCompatActivity {
                                         Log.i("LOGCAT", "2. 등록된 고객입니다 " +response.body().getUserInfo().getNickname());
 
                                     }else {
-                                        Toast toast = Toast.makeText(CameraActivity.this,
+                                        Toast.makeText(CameraActivity.this,
                                                 response.body().getUserInfo().getNickname()+"님. 예약시간: "
-                                                        +response.body().getOrderInfo().get(0).getReservTime()+", 예약인원: "
-                                                        +response.body().getOrderInfo().get(0).getPeople()+"명", Toast.LENGTH_SHORT);
-//                                        toast.setGravity(Gravity.CENTER, 0, 0);
-                                        toast.show();
+                                                    +response.body().getOrderInfo().get(0).getReservTime()+", 예약인원: "
+                                                    +response.body().getOrderInfo().get(0).getPeople()+"명", Toast.LENGTH_SHORT).show();
                                         Log.i("LOGCAT", "2. 등록된 고객입니다 " +response.body().getUserInfo().getNickname());
                                     }
 
@@ -295,7 +293,6 @@ public class CameraActivity extends AppCompatActivity {
                                         JSONObject errorJson = new JSONObject(response.errorBody().string());
                                         String errorMessage = errorJson.getString("error");
                                         Toast toast = Toast.makeText(CameraActivity.this, "" + errorMessage, Toast.LENGTH_SHORT);
-//                                        toast.setGravity(Gravity.CENTER, 0, 0);
                                         toast.show();
                                         Log.i("LOGCAT", "에러 상태코드: " + response.code() + ", 메시지: " + errorMessage);
                                     } catch (IOException | JSONException e) {
