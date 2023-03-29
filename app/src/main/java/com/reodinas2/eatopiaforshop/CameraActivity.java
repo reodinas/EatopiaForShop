@@ -168,11 +168,8 @@ public class CameraActivity extends AppCompatActivity {
 
         // Image analysis use case
         imageAnalysis = new ImageAnalysis.Builder()
-                .setBackpressureStrategy(
-                        ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
+                .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
                 .build();
-
-
 
         imageAnalysis.setAnalyzer(getExecutor(), new ImageAnalysis.Analyzer() {
             @Override
@@ -193,8 +190,6 @@ public class CameraActivity extends AppCompatActivity {
 
                                                 if (currentTrackingId != previousTrackingId){
                                                     Snackbar.make(previewView, "얼굴을 감지했습니다.", Snackbar.LENGTH_SHORT).show();
-
-
 
                                                     capturePhoto();
                                                     previousTrackingId = currentTrackingId;
