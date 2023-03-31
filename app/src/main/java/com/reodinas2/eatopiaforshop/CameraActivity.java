@@ -67,7 +67,7 @@ import retrofit2.Retrofit;
 public class CameraActivity extends AppCompatActivity {
 
     private static final int REQUEST_CODE_PERMISSIONS = 1000;
-    public static int RESTAURANT_ID = 1190;
+    public static int RESTAURANT_ID = 17346;
     private ListenableFuture<ProcessCameraProvider> cameraProviderFuture;
 
     private PreviewView previewView;
@@ -261,6 +261,7 @@ public class CameraActivity extends AppCompatActivity {
                                 Log.i("LOGCAT", "Success");
                                 Log.i("LOGCAT", String.valueOf(response));
 
+                                // TODO: reservTime을 로컬타임으로 변환
                                 if (response.isSuccessful()) {
                                     if (response.body().getMsg() != null) {
                                         Toast toast = Toast.makeText(CameraActivity.this, "" +response.body().getMsg(), Toast.LENGTH_SHORT);
