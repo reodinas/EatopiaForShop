@@ -51,7 +51,11 @@ import org.json.JSONObject;
 
 import java.io.File;
 import java.io.IOException;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.List;
+import java.util.TimeZone;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
 
@@ -67,13 +71,17 @@ import retrofit2.Retrofit;
 public class CameraActivity extends AppCompatActivity {
 
     private static final int REQUEST_CODE_PERMISSIONS = 1000;
-    public static int RESTAURANT_ID = 17346;
+    public static int RESTAURANT_ID = 17810;
     private ListenableFuture<ProcessCameraProvider> cameraProviderFuture;
 
     private PreviewView previewView;
     private ImageCapture imageCapture;
     private ImageAnalysis imageAnalysis;
-    private Button bCapture;
+    ProcessCameraProvider cameraProvider;
+
+    SimpleDateFormat sf; // UTC 타임존을 위한 변수
+    SimpleDateFormat df; // Local 타임존을 위한 변수
+    String reservTime;
 
     private InputImage image;
     // Initialize the face detector
@@ -95,17 +103,24 @@ public class CameraActivity extends AppCompatActivity {
 
         requestPermissions();
 
+        sf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
+        df = new SimpleDateFormat("yyyy-MM-dd HH:mm");
+        sf.setTimeZone(TimeZone.getTimeZone("UTC"));
+        df.setTimeZone(TimeZone.getDefault());
+
         previewView = findViewById(R.id.previewView);
 
         cameraProviderFuture = ProcessCameraProvider.getInstance(this);
         cameraProviderFuture.addListener(() -> {
             try {
-                ProcessCameraProvider cameraProvider = cameraProviderFuture.get();
+                cameraProvider = cameraProviderFuture.get();
                 startCameraX(cameraProvider);
             } catch (ExecutionException | InterruptedException e) {
                 e.printStackTrace();
             }
         }, getExecutor());
+
+
     }
 
     private void requestPermissions() {
@@ -261,7 +276,6 @@ public class CameraActivity extends AppCompatActivity {
                                 Log.i("LOGCAT", "Success");
                                 Log.i("LOGCAT", String.valueOf(response));
 
-                                // TODO: reservTime을 로컬타임으로 변환
                                 if (response.isSuccessful()) {
                                     if (response.body().getMsg() != null) {
                                         Toast toast = Toast.makeText(CameraActivity.this, "" +response.body().getMsg(), Toast.LENGTH_SHORT);
@@ -277,11 +291,26 @@ public class CameraActivity extends AppCompatActivity {
                                         Log.i("LOGCAT", "2. 등록된 고객입니다 " +response.body().getUserInfo().getNickname());
 
                                     }else {
-                                        Toast.makeText(CameraActivity.this,
-                                                response.body().getUserInfo().getNickname()+"님. 예약시간: "
-                                                    +response.body().getOrderInfo().get(0).getReservTime()+", 예약인원: "
-                                                    +response.body().getOrderInfo().get(0).getPeople()+"명", Toast.LENGTH_SHORT).show();
+
                                         Log.i("LOGCAT", "2. 등록된 고객입니다 " +response.body().getUserInfo().getNickname());
+
+                                        try {
+                                            String reservTimeUTC = response.body().getOrderInfo().get(0).getReservTime();
+                                            reservTime = df.format(sf.parse(reservTimeUTC));
+
+                                            Toast.makeText(CameraActivity.this,
+                                                    response.body().getUserInfo().getNickname()+"님. 예약시간: "
+                                                            +reservTime+", 예약인원: "
+                                                            +response.body().getOrderInfo().get(0).getPeople()+"명", Toast.LENGTH_SHORT).show();
+
+                                        } catch (ParseException e) {
+                                            throw new RuntimeException(e);
+                                        }
+
+
+
+
+
                                     }
 
                                 }else {
@@ -296,13 +325,14 @@ public class CameraActivity extends AppCompatActivity {
                                     }
                                 }
 
-//                                Handler handler = new Handler();
-//                                handler.postDelayed(new Runnable() {
-//                                    @Override
-//                                    public void run() {
-//                                        finish();
-//                                    }
-//                                }, 2000); //딜레이 타임 조절
+                                Handler handler = new Handler();
+                                handler.postDelayed(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        cameraProvider.unbindAll();
+                                        finish();
+                                    }
+                                }, 1000); //딜레이 타임 조절
 
                             }
 
