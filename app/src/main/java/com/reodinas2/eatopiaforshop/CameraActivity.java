@@ -166,7 +166,7 @@ public class CameraActivity extends AppCompatActivity {
     @SuppressLint("RestrictedApi")
     private void startCameraX(ProcessCameraProvider cameraProvider) {
         cameraProvider.unbindAll();
-        // Camera Selectior use case
+        // Camera Selector use case
         CameraSelector cameraSelector = new CameraSelector.Builder()
                 .requireLensFacing(CameraSelector.LENS_FACING_FRONT)
                 .build();
